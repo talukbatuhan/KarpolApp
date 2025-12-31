@@ -55,15 +55,15 @@ export default async function TablePage({ params }: TablePageProps) {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">{tableDef.name}</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{(tableDef as any).name}</h2>
                 <p className="text-muted-foreground">
-                    {tableDef.description}
+                    {(tableDef as any).description}
                 </p>
             </div>
 
             <TableEditor
-                tableDefinition={tableDef}
-                initialRows={rows || []}
+                tableDefinition={tableDef as any}
+                initialRows={(rows || []) as any}
                 userPermissions={userPermissions}
                 userRole={userRole}
             />

@@ -12,7 +12,7 @@ const createTaskSchema = z.object({
 })
 
 export async function createTask(prevState: any, formData: FormData) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const validatedFields = createTaskSchema.safeParse({
         title: formData.get('title'),
@@ -55,7 +55,7 @@ export async function createTask(prevState: any, formData: FormData) {
 }
 
 export async function toggleTaskStatus(taskId: string, currentStatus: string) {
-    const supabase = createClient()
+    const supabase = createClient() as any
     const newStatus = currentStatus === 'done' ? 'todo' : 'done'
 
     const { error } = await supabase
@@ -73,7 +73,7 @@ export async function toggleTaskStatus(taskId: string, currentStatus: string) {
 }
 
 export async function deleteTask(taskId: string) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const { error } = await supabase
         .from('tasks')
@@ -82,7 +82,7 @@ export async function deleteTask(taskId: string) {
 }
 
 export async function updateTaskStatus(taskId: string, status: string) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const { error } = await supabase
         .from('tasks')

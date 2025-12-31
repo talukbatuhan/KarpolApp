@@ -1,0 +1,54 @@
+﻿
+> internal-panel@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 14.1.0
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+node.exe : Failed to compile
+.
+At line:1 char:1
++ & "C:\Program Files\nodejs
+/node.exe" "C:\Program Files
+\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (Faile  
+  d to compile.:String) [   
+ ], RemoteException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+
+./app/(dashboard)/tasks/acti
+ons.ts:63:17
+Type error: Argument of type
+ 'any' is not assignable to 
+parameter of type 'never'.
+
+[0m [90m 61 |[39m     [3
+6mconst[39m { error } [33m
+=[39m [36mawait[39m supab
+ase[0m
+[0m [90m 62 |[39m        
+ [33m.[39m[36mfrom[39m(
+[32m'tasks'[39m)[0m
+[0m[31m[1m>[22m[39m[90
+m 63 |[39m         [33m.[
+39mupdate({ status[33m:[39
+m newStatus } [36mas[39m a
+ny)[0m
+[0m [90m    |[39m        
+         [31m[1m^[22m[39
+m[0m
+[0m [90m 64 |[39m        
+ [33m.[39meq([32m'id'[39
+m[33m,[39m taskId)[0m
+[0m [90m 65 |[39m[0m
+[0m [90m 66 |[39m     [3
+6mif[39m (error) {[0m
