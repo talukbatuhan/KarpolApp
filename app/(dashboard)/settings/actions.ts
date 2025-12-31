@@ -21,13 +21,13 @@ export async function createUser(prevState: any, formData: FormData) {
 
     // Check admin
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', currentUser.id).single()
-    if (profile?.role !== 'admin') return { message: "Forbidden" }
+    if ((profile as any)?.role !== 'admin') return { message: "Forbidden" }
 
     const validatedFields = createUserSchema.safeParse({
-        email: formData.get('email'),
-        password: formData.get('password'),
-        full_name: formData.get('full_name'),
-        role: formData.get('role'),
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+        full_name: formData.get('full_name') as string,
+        role: formData.get('role') as string,
     })
 
     if (!validatedFields.success) {
@@ -52,7 +52,7 @@ export async function createUser(prevState: any, formData: FormData) {
         // Update role immediately (The trigger might have created the profile with 'user' role)
         // We wait a tiny bit or just allow the trigger to finish? Trigger is sync usually in PG for 'after insert'.
         // But to be safe, we just update the profile row.
-        const { error: profileError } = await supabaseAdmin
+        const { error: profileError } = await (supabaseAdmin as any)
             .from('profiles')
             .update({ role } as any)
             .eq('id', newUser.user.id)
@@ -79,8 +79,8 @@ export async function updatePassword(prevState: any, formData: FormData) {
     if (!user) return { message: "Unauthorized" }
 
     const validatedFields = updatePasswordSchema.safeParse({
-        password: formData.get('password'),
-        confirmPassword: formData.get('confirmPassword')
+        password: formData.get('password') as string,
+        confirmPassword: formData.get('confirmPassword') as string
     })
 
     if (!validatedFields.success) {
@@ -106,7 +106,7 @@ export async function updateProfile(prevState: any, formData: FormData) {
     const supabase = createClient()
 
     const validatedFields = profileSchema.safeParse({
-        full_name: formData.get('full_name'),
+        full_name: formData.get('full_name') as string,
     })
 
     if (!validatedFields.success) {
@@ -118,7 +118,7 @@ export async function updateProfile(prevState: any, formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { message: "Unauthorized" }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('profiles')
         .update({ full_name } as any)
         .eq('id', user.id)
@@ -145,11 +145,11 @@ export async function updateUserRole(userId: string, newRole: string) {
         .eq('id', user.id)
         .single()
 
-    if (profile?.role !== 'admin') {
+    if ((profile as any)?.role !== 'admin') {
         return { success: false, message: "Forbidden" }
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('profiles')
         .update({ role: newRole } as any)
         .eq('id', userId)

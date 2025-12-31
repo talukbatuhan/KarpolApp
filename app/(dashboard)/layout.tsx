@@ -20,7 +20,7 @@ export default async function DashboardLayout({
             .select('role')
             .eq('id', user.id)
             .single()
-        role = profile?.role || null
+        role = (profile as any)?.role || null
     }
 
     return (

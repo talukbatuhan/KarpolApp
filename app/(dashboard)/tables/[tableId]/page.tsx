@@ -11,6 +11,22 @@ interface TablePageProps {
 export default async function TablePage({ params }: TablePageProps) {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+
+    let userPermissions = {}
+    let userRole = 'user'
+
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, permissions')
+            .eq('id', user.id)
+            .single()
+
+        userPermissions = (profile as any)?.permissions || {}
+        userRole = (profile as any)?.role || 'user'
+    }
+
     // 1. Fetch Table Definition
     const { data: tableDef, error: tableError } = await supabase
         .from('dynamic_tables')
@@ -45,7 +61,12 @@ export default async function TablePage({ params }: TablePageProps) {
                 </p>
             </div>
 
-            <TableEditor tableDefinition={tableDef} initialRows={rows || []} />
+            <TableEditor
+                tableDefinition={tableDef}
+                initialRows={rows || []}
+                userPermissions={userPermissions}
+                userRole={userRole}
+            />
         </div>
     )
 }

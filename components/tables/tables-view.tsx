@@ -5,13 +5,46 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { CreateTableDialog } from "@/app/(dashboard)/tables/create-table-dialog"
 import { useLanguage } from "@/components/providers/language-provider"
+import { Trash2 } from "lucide-react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { deleteTable } from "@/app/(dashboard)/tables/actions"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 interface TablesViewProps {
     tables: any[] | null
+    userPermissions?: {
+        can_create_tables?: boolean
+        can_delete_tables?: boolean
+    }
+    userRole?: string
 }
 
-export function TablesView({ tables }: TablesViewProps) {
+export function TablesView({ tables, userPermissions, userRole }: TablesViewProps) {
     const { t } = useLanguage()
+    const router = useRouter()
+
+    const canDelete = userRole === 'admin' || userPermissions?.can_delete_tables === true
+
+    const handleDelete = async (tableId: string, tableName: string) => {
+        const result = await deleteTable(tableId)
+        if (result.success) {
+            toast.success(`"${tableName}" tablosu silindi`)
+            router.refresh()
+        } else {
+            toast.error(result.message || "Tablo silinemedi")
+        }
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -22,14 +55,46 @@ export function TablesView({ tables }: TablesViewProps) {
                         {t('tables_desc')}
                     </p>
                 </div>
-                <CreateTableDialog />
+                <CreateTableDialog userPermissions={userPermissions} userRole={userRole} />
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {tables?.map((table) => (
-                    <Card key={table.id}>
+                    <Card key={table.id} className="relative group">
                         <CardHeader>
-                            <CardTitle>{table.name}</CardTitle>
+                            <CardTitle className="flex items-center justify-between">
+                                <span>{table.name}</span>
+                                {canDelete && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Tabloyu sil?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    <span className="font-semibold">{table.name}</span> tablosunu silmek üzeresiniz. Bu işlem geri alınamaz ve tablodaki tüm veriler silinecektir.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>İptal</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() => handleDelete(table.id, table.name)}
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                >
+                                                    Sil
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+                            </CardTitle>
                             <CardDescription>{table.description || t('no_desc')}</CardDescription>
                         </CardHeader>
                         <CardContent>

@@ -45,7 +45,7 @@ export function AuditLogsView({ logs: initialLogs }: AuditLogsViewProps) {
     const [actionFilter, setActionFilter] = useState("all")
     const [tableSchemas, setTableSchemas] = useState<Record<string, any>>({})
 
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     // Fetch Table Schemas for mapping column IDs to names
     useEffect(() => {

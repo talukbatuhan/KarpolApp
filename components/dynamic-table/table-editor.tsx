@@ -49,9 +49,11 @@ import { TablePermissions } from "./table-permissions"
 interface TableEditorProps {
     tableDefinition: DynamicTable
     initialRows: TableRowData[]
+    userPermissions?: any
+    userRole?: string
 }
 
-export function TableEditor({ tableDefinition, initialRows }: TableEditorProps) {
+export function TableEditor({ tableDefinition, initialRows, userPermissions, userRole }: TableEditorProps) {
     const [data, setData] = React.useState<TableRowData[]>(initialRows)
     const [sorting, setSorting] = React.useState<SortingState>([])
     const router = useRouter()
@@ -179,7 +181,12 @@ export function TableEditor({ tableDefinition, initialRows }: TableEditorProps) 
                     />
                     <TablePermissions tableId={tableDefinition.id} ownerId={tableDefinition.owner_id} />
                     <ColumnManager tableId={tableDefinition.id} currentSchema={schema as any} />
-                    <AddRowDialog tableId={tableDefinition.id} schema={schema as any} />
+                    <AddRowDialog
+                        tableId={tableDefinition.id}
+                        schema={schema as any}
+                        userPermissions={userPermissions}
+                        userRole={userRole}
+                    />
                 </div>
             </div>
 

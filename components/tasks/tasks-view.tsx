@@ -1,7 +1,7 @@
 "use client"
 
 import { CreateTaskDialog } from "@/app/(dashboard)/tasks/create-task-dialog"
-import { TaskItem } from "@/app/(dashboard)/tasks/task-item"
+import { TaskItem } from "@/components/tasks/task-item"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/components/providers/language-provider"
 

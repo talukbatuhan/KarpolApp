@@ -28,7 +28,7 @@ interface Notification {
 export function NotificationCenter() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const fetchNotifications = async () => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -94,7 +94,7 @@ export function NotificationCenter() {
                     schema: 'public',
                     table: 'notifications'
                 },
-                (payload) => {
+                (payload: any) => {
                     const newNotification = payload.new as Notification
                     setNotifications(prev => [newNotification, ...prev])
                     setUnreadCount(prev => prev + 1)

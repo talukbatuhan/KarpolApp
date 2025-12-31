@@ -13,7 +13,7 @@ const createTableSchema = z.object({
 })
 
 export async function createTable(prevState: any, formData: FormData) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const validatedFields = createTableSchema.safeParse({
         name: formData.get('name'),
@@ -33,6 +33,22 @@ export async function createTable(prevState: any, formData: FormData) {
         const { data: user, error: userError } = await supabase.auth.getUser()
         if (userError || !user) throw new Error("Unauthorized")
 
+        // Check user permissions
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, permissions')
+            .eq('id', user.user.id)
+            .single()
+
+        const canCreate = (profile as any)?.role === 'admin' ||
+            (profile as any)?.permissions?.can_create_tables === true
+
+        if (!canCreate) {
+            return {
+                message: 'Yetkiniz yok: Tablo oluşturmak için "Tablo Oluşturma" yetkisine ihtiyacınız var.',
+            }
+        }
+
         const { data, error } = await supabase
             .from('dynamic_tables')
             .insert({
@@ -46,7 +62,7 @@ export async function createTable(prevState: any, formData: FormData) {
 
         if (error) {
             return {
-                message: 'Database Error: Failed to Create Table.',
+                message: 'Veritabanı Hatası: Tablo oluşturulamadı.',
             }
         }
 
@@ -54,7 +70,7 @@ export async function createTable(prevState: any, formData: FormData) {
         return { message: 'Success', tableId: data.id }
     } catch (error) {
         return {
-            message: 'Database Error: Failed to Create Table.',
+            message: 'Veritabanı Hatası: Tablo oluşturulamadı.',
         }
     }
 }

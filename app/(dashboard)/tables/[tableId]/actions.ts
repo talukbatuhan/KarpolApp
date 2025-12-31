@@ -14,7 +14,7 @@ type ColumnSchema = {
 // --- Schema Management ---
 
 export async function updateTableSchema(tableId: string, newSchema: ColumnSchema[]) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     const { error } = await supabase
         .from('dynamic_tables')
@@ -33,7 +33,7 @@ export async function updateTableSchema(tableId: string, newSchema: ColumnSchema
 // --- Row Management ---
 
 export async function addRow(tableId: string, rowData: Record<string, any>) {
-    const supabase = createClient()
+    const supabase = createClient() as any
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return { success: false, message: "Unauthorized" }
@@ -68,7 +68,7 @@ export async function addRow(tableId: string, rowData: Record<string, any>) {
 }
 
 export async function importRows(tableId: string, rowsData: Record<string, any>[]) {
-    const supabase = createClient()
+    const supabase = createClient() as any
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return { success: false, message: "Unauthorized" }
@@ -105,7 +105,7 @@ export async function importRows(tableId: string, rowsData: Record<string, any>[
 }
 
 export async function deleteRow(rowId: string, tableId: string) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     // Soft delete
     const { error } = await supabase
@@ -122,7 +122,7 @@ export async function deleteRow(rowId: string, tableId: string) {
 }
 
 export async function updateRowData(rowId: string, tableId: string, newData: Record<string, any>) {
-    const supabase = createClient()
+    const supabase = createClient() as any
 
     // We need to merge with existing data usually, but for single cell edits, 
     // we might send the whole object or just the patch. 
