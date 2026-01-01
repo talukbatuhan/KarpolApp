@@ -1,17 +1,19 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, CreditCard, DollarSign, Users, ArrowUpRight, ArrowDownRight, Package, Truck, Clock, Database, CheckSquare, CheckCircle2 } from "lucide-react"
+import { Activity, CreditCard, DollarSign, Users, ArrowUpRight, ArrowDownRight, Package, Truck, Clock, Database, CheckSquare, CheckCircle2, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 
 interface DashboardWidgetsProps {
     tablesCount: number
     tasksCount: number
     completedTasksCount: number
     recentAuditLogs: any[]
+    taskStatusStats: Record<string, number>
 }
 
-export function DashboardWidgets({ tablesCount, tasksCount, completedTasksCount, recentAuditLogs }: DashboardWidgetsProps) {
+export function DashboardWidgets({ tablesCount, tasksCount, completedTasksCount, recentAuditLogs, taskStatusStats }: DashboardWidgetsProps) {
     const completionRate = tasksCount > 0 ? Math.round((completedTasksCount / tasksCount) * 100) : 0
 
     return (
@@ -111,33 +113,129 @@ export function DashboardWidgets({ tablesCount, tasksCount, completedTasksCount,
                 </Card>
                 <Card className="col-span-3 bg-background/50 backdrop-blur-lg border-primary/10">
                     <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            Task Status Distribution
+                        </CardTitle>
                         <CardDescription>
-                            Common tasks and shortcuts.
+                            Visual breakdown of task statuses.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="grid gap-4">
-                        <div className="flex items-center gap-4 rounded-sm border border-border/50 p-4 hover:bg-muted/50 transition-colors cursor-pointer group">
-                            <Truck className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <div className="flex-1 space-y-1">
-                                <p className="text-sm font-medium leading-none">New Shipment</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Create a new delivery record.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 rounded-sm border border-border/50 p-4 hover:bg-muted/50 transition-colors cursor-pointer group">
-                            <Clock className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <div className="flex-1 space-y-1">
-                                <p className="text-sm font-medium leading-none">Time Logs</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Review access hours.
-                                </p>
-                            </div>
-                        </div>
+                    <CardContent>
+                        <TaskStatusChart taskStatusStats={taskStatusStats} />
                     </CardContent>
                 </Card>
             </div>
         </div>
     )
+}
+
+// Helper component for the Task Status Chart
+interface TaskStatusChartProps {
+    taskStatusStats: Record<string, number>
+}
+
+function TaskStatusChart({ taskStatusStats }: TaskStatusChartProps) {
+    // Transform data for Recharts
+    const chartData = Object.entries(taskStatusStats).map(([status, count]) => ({
+        name: formatStatusName(status),
+        value: count,
+        status: status
+    }))
+
+    // Define colors for different statuses
+    const COLORS: Record<string, string> = {
+        'pending': 'hsl(var(--chart-1))',
+        'in_progress': 'hsl(var(--chart-2))',
+        'done': 'hsl(var(--chart-3))',
+        'blocked': 'hsl(var(--chart-4))',
+        'cancelled': 'hsl(var(--chart-5))',
+    }
+
+    // Fallback colors
+    const getColor = (status: string, index: number): string => {
+        return COLORS[status] || `hsl(${(index * 360) / chartData.length}, 70%, 50%)`
+    }
+
+    if (chartData.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                No task data available
+            </div>
+        )
+    }
+
+    return (
+        <div className="w-full h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={renderCustomLabel}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        animationBegin={0}
+                        animationDuration={800}
+                    >
+                        {chartData.map((entry, index) => (
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={getColor(entry.status, index)}
+                                className="hover:opacity-80 transition-opacity cursor-pointer"
+                            />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '6px',
+                            fontSize: '12px'
+                        }}
+                    />
+                    <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        iconType="circle"
+                        formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                    />
+                </PieChart>
+            </ResponsiveContainer>
+        </div>
+    )
+}
+
+// Custom label renderer for pie chart
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    if (percent < 0.05) return null // Don't show label for very small slices
+
+    const RADIAN = Math.PI / 180
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+    return (
+        <text
+            x={x}
+            y={y}
+            fill="white"
+            textAnchor={x > cx ? 'start' : 'end'}
+            dominantBaseline="central"
+            className="text-xs font-semibold"
+        >
+            {`${(percent * 100).toFixed(0)}%`}
+        </text>
+    )
+}
+
+// Format status names for display
+function formatStatusName(status: string): string {
+    return status
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
 }

@@ -8,9 +8,10 @@ interface DashboardViewProps {
     tasksCount: number
     completedTasksCount: number
     recentAuditLogs: any[]
+    taskStatusStats: Record<string, number>
 }
 
-export function DashboardView({ tablesCount, tasksCount, completedTasksCount, recentAuditLogs }: DashboardViewProps) {
+export function DashboardView({ tablesCount, tasksCount, completedTasksCount, recentAuditLogs, taskStatusStats }: DashboardViewProps) {
     const { t } = useLanguage()
 
     return (
@@ -29,6 +30,7 @@ export function DashboardView({ tablesCount, tasksCount, completedTasksCount, re
                 tasksCount={tasksCount}
                 completedTasksCount={completedTasksCount}
                 recentAuditLogs={recentAuditLogs}
+                taskStatusStats={taskStatusStats}
             />
         </div>
     )

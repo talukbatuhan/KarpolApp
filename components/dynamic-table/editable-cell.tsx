@@ -61,6 +61,8 @@ export function EditableCell({ getValue, row, column, table }: EditableCellProps
     const initialValue = getValue()
     const [value, setValue] = useState(initialValue)
     const [isEditing, setIsEditing] = useState(false)
+    const [cellPosition, setCellPosition] = useState({ top: 0, left: 0 })
+    const cellRef = useRef<HTMLDivElement>(null)
 
     // Attempt to get column definition directly
     // Ideally we pass schema info in column definition meta
@@ -72,6 +74,17 @@ export function EditableCell({ getValue, row, column, table }: EditableCellProps
     useEffect(() => {
         setValue(initialValue)
     }, [initialValue])
+
+    const handleEditStart = () => {
+        if (cellRef.current) {
+            const rect = cellRef.current.getBoundingClientRect()
+            setCellPosition({
+                top: rect.top + rect.height / 2,
+                left: rect.left + rect.width / 2,
+            })
+        }
+        setIsEditing(true)
+    }
 
     const onBlur = async () => {
         setIsEditing(false)
@@ -103,59 +116,102 @@ export function EditableCell({ getValue, row, column, table }: EditableCellProps
     if (isEditing) {
         if (columnType === 'select') {
             return (
-                <Select
-                    value={value as string}
-                    onValueChange={(val) => {
-                        setValue(val)
-                        // Auto save on select change? Or wait for click away?
-                        // Better to auto save for select usually, but onBlur structure handles safely.
-                        // Let's manually trigger save here for better UX
-                        // Actually, Select doesn't have simple onBlur for the whole component easily.
-                        // We can use the open change to detect close?
-                        // Simple approach: Update local, let user click away? 
-                        // No, clicking away from Select Content might not trigger onBlur of the Trigger.
-                        // Let's trigger save immediately on change for Select.
-                        const rowId = row.original.id
-                        const tableId = row.original.table_id
-                        const colId = column.id
-                        const currentData = row.original.data || {}
-                        const newData = { ...currentData, [colId]: val }
-                        updateRowData(rowId, tableId, newData)
-                        setIsEditing(false)
-                    }}
-                    open={true}
-                    onOpenChange={(open) => {
-                        if (!open) setIsEditing(false)
-                    }}
-                >
-                    <SelectTrigger className="h-8 w-full">
-                        <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {columnOptions.map((opt: string) => (
-                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/20 z-40"
+                        onClick={() => {
+                            setValue(initialValue)
+                            setIsEditing(false)
+                        }}
+                    />
+                    {/* Zoom Box for Select */}
+                    <div
+                        className="fixed z-50 bg-background border-2 border-primary rounded-lg shadow-2xl p-4 animate-in zoom-in-95 duration-200"
+                        style={{
+                            top: `${cellPosition.top}px`,
+                            left: `${cellPosition.left}px`,
+                            transform: 'translate(-50%, -50%)',
+                            minWidth: '300px',
+                            minHeight: '80px',
+                        }}
+                    >
+                        <Select
+                            value={value as string}
+                            onValueChange={(val) => {
+                                setValue(val)
+                                const rowId = row.original.id
+                                const tableId = row.original.table_id
+                                const colId = column.id
+                                const currentData = row.original.data || {}
+                                const newData = { ...currentData, [colId]: val }
+                                updateRowData(rowId, tableId, newData)
+                                setIsEditing(false)
+                            }}
+                            open={true}
+                            onOpenChange={(open) => {
+                                if (!open) setIsEditing(false)
+                            }}
+                        >
+                            <SelectTrigger className="h-10 w-full text-lg">
+                                <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {columnOptions.map((opt: string) => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <div className="text-xs text-muted-foreground mt-2 text-center">
+                            Press Esc to cancel
+                        </div>
+                    </div>
+                </>
             )
         }
 
         return (
-            <AutoResizeTextarea
-                autoFocus
-                value={value as string || ""}
-                onChange={setValue}
-                onBlur={onBlur}
-                onKeyDown={onKeyDown}
-            />
+            <>
+                {/* Backdrop */}
+                <div
+                    className="fixed inset-0 bg-black/20 z-40"
+                    onClick={() => {
+                        setValue(initialValue)
+                        setIsEditing(false)
+                    }}
+                />
+                {/* Zoom Box */}
+                <div
+                    className="fixed z-50 bg-background border-2 border-primary rounded-lg shadow-2xl p-4 animate-in zoom-in-95 duration-200"
+                    style={{
+                        top: `${cellPosition.top}px`,
+                        left: `${cellPosition.left}px`,
+                        transform: 'translate(-50%, -50%)',
+                        minWidth: '300px',
+                        minHeight: '80px',
+                    }}
+                >
+                    <AutoResizeTextarea
+                        autoFocus
+                        value={value as string || ""}
+                        onChange={setValue}
+                        onBlur={onBlur}
+                        onKeyDown={onKeyDown}
+                    />
+                    <div className="text-xs text-muted-foreground mt-2 text-center">
+                        Press Enter to save • Esc to cancel
+                    </div>
+                </div>
+            </>
         )
     }
 
     return (
         <div
-            onClick={() => setIsEditing(true)}
+            ref={cellRef}
+            onClick={handleEditStart}
             className={cn(
-                "cursor-pointer hover:bg-muted/50 p-2 rounded min-h-[2.5rem] flex items-center whitespace-pre-wrap break-words",
+                "cursor-pointer hover:bg-muted/50 p-2 rounded min-h-[2.5rem] flex items-center whitespace-pre-wrap break-words transition-colors",
                 !value && "text-muted-foreground italic text-xs h-8"
             )}
         >
@@ -164,3 +220,4 @@ export function EditableCell({ getValue, row, column, table }: EditableCellProps
         </div>
     )
 }
+
